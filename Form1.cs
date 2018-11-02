@@ -23,6 +23,8 @@ using System.Net;
 using System.Net.Http;
 using System.Web;
 using System.Text;
+using System.Diagnostics;
+using System.Security.Principal;
 
 namespace SungurTekSignature
 {
@@ -90,7 +92,6 @@ namespace SungurTekSignature
                 imzaturu = HttpUtility.ParseQueryString(url.Query).Get("imzaturu");
                 imzalanmis = HttpUtility.ParseQueryString(url.Query).Get("imzalanmis");
                 dosyaadi = HttpUtility.ParseQueryString(url.Query).Get("dosyaadi");
-
             }
             this.timer1.Interval = 1000;
             timer1.Start();
@@ -106,19 +107,20 @@ namespace SungurTekSignature
             this.btnSayi8.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, this.btnSayi0.Width, this.btnSayi0.Height, 4, 4));
             this.btnSayi9.Region = Region.FromHrgn(CreateRoundRectRgn(0, 0, this.btnSayi0.Width, this.btnSayi0.Height, 4, 4));
 
-            //WindowsPrincipal pricipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-            //bool hasAdministrativeRight = pricipal.IsInRole(WindowsBuiltInRole.Administrator);
+            WindowsPrincipal pricipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            bool hasAdministrativeRight = pricipal.IsInRole(WindowsBuiltInRole.Administrator);
 
-            //if (!hasAdministrativeRight)
-            //{
-            //    ProcessStartInfo processInfo = new ProcessStartInfo();
-            //    processInfo.Verb = "runas";
-            //    processInfo.FileName = AppDomain.CurrentDomain.BaseDirectory + "SungurTekSignature.exe";
-            //    Process.Start(processInfo);
-            //    this.Close();
-            //}
+            if (!hasAdministrativeRight)
+            {
+                ProcessStartInfo processInfo = new ProcessStartInfo();
+                processInfo.Verb = "runas";
+                processInfo.FileName = AppDomain.CurrentDomain.BaseDirectory + "SungurTekSignature.exe";
+                processInfo.Arguments = args[1];
+                Process.Start(processInfo);
+                this.Close();
+            }
 
-            //addingProtocols();
+            addingProtocols();
 
             
             string sourceFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"smartcard-config.xml");
@@ -384,7 +386,7 @@ namespace SungurTekSignature
                                             //FileStream fs = new FileStream(di.FullName + @"\" + dosyaadi + "." + uzanti + ".p7s", FileMode.Open, FileAccess.Read);
                                             try
                                             {
-                                                string requestURL = "http://localhost:24298/Home/Post";
+                                                string requestURL = returnurl;
                                                 string fileName = di.FullName + @"\" + dosyaadi + "." + uzanti + ".p7s";
 
                                                 Send(requestURL,signedDocument);
